@@ -267,19 +267,18 @@ set(
 
 # Documentation files (index.htm refers to html/...)
 
-set(
-    doc_FILES
-        README.txt
-        REGISTER.txt
-        Announce.txt
-        COPYING.txt
-        index.htm
+set(doc_FILES
+    README.txt
+    REGISTER.txt
+    Announce.txt
+    COPYING.txt
+    index.htm
 )
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
 set(LIB_NAME_qhull_CPP qhullcpp)
-set(LIB_NAME_qhull libqhull)  # Temporarily avoid name conflict with qhull executable
+set(LIB_NAME_qhull qhull)  # Temporarily avoid name conflict with qhull executable
 set(LIB_NAME_qhull_P qhull_p)
 set(LIB_NAME_qhull_R qhull_r)
 
@@ -293,7 +292,6 @@ if(BUILD_SHARED_LIBS)
     )
     if(WIN32)
         set_target_properties (${LIB_NAME_qhull} PROPERTIES
-            OUTPUT_NAME "qhull"
             IMPORT_SUFFIX "_i.lib"
         )
     endif()
@@ -408,7 +406,10 @@ macro(ADD_EXE target sources tll)
     set(INSTALL_TARGETS ${INSTALL_TARGETS} ${target})
 endmacro()
 
-add_exe(qhull src/qhull/unix_r.c ${LIB_NAME_qhull_R})
+add_exe(qhull-app src/qhull/unix_r.c ${LIB_NAME_qhull})
+set_target_properties (qhull-app PROPERTIES
+    OUTPUT_NAME "qhull"
+)
 add_exe(rbox src/rbox/rbox.c ${LIB_NAME_qhull})
 add_exe(qconvex src/qconvex/qconvex.c ${LIB_NAME_qhull})
 add_exe(qdelaunay src/qdelaunay/qdelaun.c ${LIB_NAME_qhull})
@@ -495,11 +496,11 @@ add_test(NAME user_eg3
 set(qhull_TARGETS
     # ${LIB_NAME_qhull_CPP}
     ${LIB_NAME_qhull}
-    ${LIB_NAME_qhull_P}
-    ${LIB_NAME_qhull_R}
 )
 set(qhull_TARGETS_INSTALL ${qhull_TARGETS}
-    qhull rbox qconvex qdelaunay qvoronoi qhalf
+    ${LIB_NAME_qhull_P}
+    ${LIB_NAME_qhull_R}
+    qhull-app rbox qconvex qdelaunay qvoronoi qhalf
 )
 
 if (REGISTER_PACKAGE)
