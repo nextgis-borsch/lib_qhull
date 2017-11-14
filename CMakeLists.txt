@@ -494,10 +494,10 @@ add_test(NAME user_eg3
    COMMAND sh -c "./user_eg3 rbox '10 D2' '2 D2' qhull 's p' facets")
 
 set(qhull_TARGETS
-    # ${LIB_NAME_qhull_CPP}
     ${LIB_NAME_qhull}
 )
 set(qhull_TARGETS_INSTALL ${qhull_TARGETS}
+    # ${LIB_NAME_qhull_CPP}
     ${LIB_NAME_qhull_P}
     ${LIB_NAME_qhull_R}
     qhull-app rbox qconvex qdelaunay qvoronoi qhalf
