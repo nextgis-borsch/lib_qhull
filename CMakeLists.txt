@@ -298,6 +298,9 @@ if(BUILD_SHARED_LIBS)
 elseif(OSX_FRAMEWORK)
     add_library(${LIB_NAME_qhull} SHARED  ${libqhull_SOURCES} ${libqhull_HEADERS}
     src/libqhull/qhull-exports.def)
+    set_property(SOURCE ${libqhull_HEADERS}
+      PROPERTY MACOSX_PACKAGE_LOCATION Headers/libqhull
+    )
     set_target_properties(${LIB_NAME_qhull} PROPERTIES
       FRAMEWORK TRUE
       FRAMEWORK_VERSION ${FRAMEWORK_VERSION}
@@ -305,7 +308,7 @@ elseif(OSX_FRAMEWORK)
       MACOSX_FRAMEWORK_BUNDLE_VERSION ${VERSION}
       MACOSX_FRAMEWORK_IDENTIFIER org.libqhull.libqhull
       XCODE_ATTRIBUTE_INSTALL_PATH "@rpath"
-      PUBLIC_HEADER "${libqhull_HEADERS}"
+      # PUBLIC_HEADER "${libqhull_HEADERS}"
       VERSION ${VERSION}
       SOVERSION ${SOVERSION}
       OUTPUT_NAME "qhull"
@@ -336,6 +339,9 @@ if(BUILD_SHARED_LIBS)
 elseif(OSX_FRAMEWORK)
     add_library(${LIB_NAME_qhull_R} SHARED  ${libqhullr_SOURCES} ${libqhullr_HEADERS}
     src/libqhull_r/qhull_r-exports.def)
+    set_property(SOURCE ${libqhullr_HEADERS}
+      PROPERTY MACOSX_PACKAGE_LOCATION Headers/libqhull_r
+    )
     set_target_properties(${LIB_NAME_qhull_R} PROPERTIES
       FRAMEWORK TRUE
       FRAMEWORK_VERSION ${FRAMEWORK_VERSION}
@@ -343,7 +349,7 @@ elseif(OSX_FRAMEWORK)
       MACOSX_FRAMEWORK_BUNDLE_VERSION ${VERSION}
       MACOSX_FRAMEWORK_IDENTIFIER org.libqhull.libqhullr
       XCODE_ATTRIBUTE_INSTALL_PATH "@rpath"
-      PUBLIC_HEADER "${libqhullr_HEADERS}"
+      # PUBLIC_HEADER "${libqhullr_HEADERS}"
       VERSION ${VERSION}
       SOVERSION ${SOVERSION}
       )
@@ -368,6 +374,9 @@ if(BUILD_SHARED_LIBS)
 elseif(OSX_FRAMEWORK)
     add_library(${LIB_NAME_qhull_P} SHARED  ${libqhull_SOURCES} ${libqhull_HEADERS}
     src/libqhull/qhull_p-exports.def)
+    set_property(SOURCE ${libqhull_HEADERS}
+      PROPERTY MACOSX_PACKAGE_LOCATION Headers/libqhull
+    )
     set_target_properties(${LIB_NAME_qhull_P} PROPERTIES
       FRAMEWORK TRUE
       FRAMEWORK_VERSION ${FRAMEWORK_VERSION}
@@ -375,7 +384,7 @@ elseif(OSX_FRAMEWORK)
       MACOSX_FRAMEWORK_BUNDLE_VERSION ${VERSION}
       MACOSX_FRAMEWORK_IDENTIFIER org.libqhull.libqhullp
       XCODE_ATTRIBUTE_INSTALL_PATH "@rpath"
-      PUBLIC_HEADER "${libqhull_HEADERS}"
+      # PUBLIC_HEADER "${libqhull_HEADERS}"
       VERSION ${VERSION}
       SOVERSION ${SOVERSION}
       )
