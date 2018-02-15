@@ -681,6 +681,7 @@ if(UNIX)
     add_test(NAME rbox_qhull_124 COMMAND sh -c "./rbox 10 s D2 c | ./qhull d Tcv")
     add_test(NAME rbox_qhull_125 COMMAND sh -c "./rbox 10 s D2 | ./qhull d Tcv Qz Q8")
     add_test(NAME rbox_qhull_126 COMMAND sh -c "./rbox 10 D2 | ./qhull d Tcv p")
+    add_test(NAME rbox_qhull_127 COMMAND sh -c "./rbox 10 c D2 | ./qhull Fx Tcv")
     # TODO: Add tests
 endif()
 
