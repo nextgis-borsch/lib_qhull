@@ -330,11 +330,11 @@ qh_rename_sharedvertex
 qh_renameridgevertex
 qh_renamevertex
 qh_resetlists
-qh_restore_qhull
+; qh_restore_qhull
 qh_rotateinput
 qh_rotatepoints
 qh_roundi
-qh_save_qhull
+; qh_save_qhull
 qh_scaleinput
 qh_scalelast
 qh_scalepoints
