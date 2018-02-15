@@ -363,6 +363,23 @@ if(UNIX)
     target_link_libraries(${LIB_NAME_qhull_R} m)
 endif()
 
+# ---------------------------------------
+# Define options for linking to qhull_SHAREDR or qhull_SHARED
+# ---------------------------------------
+if(MSVC)
+    set(user_eg_DEFINES qh_dllimport)
+    set(user_eg2_DEFINES qh_dllimport)
+    set(user_eg3_DEFINES qh_dllimport)
+    set(user_egp_DEFINES qh_QHpointer_dllimport qh_QHpointer)
+    set(qhullp_DEFINES qh_QHpointer_dllimport qh_QHpointer)
+else()
+    set(user_eg_DEFINES )
+    set(user_eg2_DEFINES )
+    set(user_eg3_DEFINES )
+    set(user_egp_DEFINES )
+    set(qhullp_DEFINES )
+endif()
+
 if(BUILD_SHARED_LIBS)
     add_library(${LIB_NAME_qhull_P} SHARED ${libqhull_SOURCES} ${libqhull_HEADERS}
     src/libqhull/qhull_p-exports.def)
@@ -371,7 +388,7 @@ if(BUILD_SHARED_LIBS)
         SOVERSION ${SOVERSION}
     )
     if(WIN32)
-        set_target_properties(${LIB_NAME_qhull_P} PROPERTIES IMPORT_SUFFIX "_i.lib")
+        set_target_properties(${LIB_NAME_qhull_P} PROPERTIES IMPORT_SUFFIX "_i.lib" COMPILE_DEFINITIONS "${qhullp_DEFINES}")
     endif()
 elseif(OSX_FRAMEWORK)
     add_library(${LIB_NAME_qhull_P} SHARED  ${libqhull_SOURCES} ${libqhull_HEADERS}
@@ -428,23 +445,6 @@ add_exe(qvoronoi src/qvoronoi/qvoronoi.c ${LIB_NAME_qhull})
 add_exe(qhalf src/qhalf/qhalf.c ${LIB_NAME_qhull})
 
 # ---------------------------------------
-# Define options for linking to qhull_SHAREDR or qhull_SHARED
-# ---------------------------------------
-if(MSVC)
-    set(user_eg_DEFINES qh_dllimport)
-    set(user_eg2_DEFINES qh_dllimport)
-    set(user_eg3_DEFINES qh_dllimport)
-    set(user_egp_DEFINES qh_QHpointer_dllimport qh_QHpointer)
-    set(qhullp_DEFINES qh_QHpointer_dllimport qh_QHpointer)
-else()
-    set(user_eg_DEFINES )
-    set(user_eg2_DEFINES )
-    set(user_eg3_DEFINES )
-    set(user_egp_DEFINES )
-    set(qhullp_DEFINES )
-endif()
-
-# ---------------------------------------
 # Define testqset linked to qset.o and mem.o
 # Define testqset_r linked to qset_r.o and mem_r.o
 # ---------------------------------------
@@ -452,16 +452,16 @@ endif()
 add_executable(testqset ${testqset_SOURCES})
 add_executable(testqset_r ${testqsetr_SOURCES})
 
-add_exe(user_eg src/user_eg/user_eg_r.c ${LIB_NAME_qhull_R})
-set_target_properties(user_eg PROPERTIES
-    COMPILE_DEFINITIONS "${user_eg_DEFINES}")
+# add_exe(user_eg src/user_eg/user_eg_r.c ${LIB_NAME_qhull_R})
+# set_target_properties(user_eg PROPERTIES
+#     COMPILE_DEFINITIONS "${user_eg_DEFINES}")
 
 # ---------------------------------------
 # Define user_eg2 linked to reentrant qhull static library
 # ---------------------------------------
 
-add_exe(user_eg2 src/user_eg2/user_eg2_r.c ${LIB_NAME_qhull_R})
-add_exe(user_eg3 "src/user_eg3/user_eg3_r.cpp;${libqhullcpp_SOURCES}" ${LIB_NAME_qhull_R})
+# add_exe(user_eg2 src/user_eg2/user_eg2_r.c ${LIB_NAME_qhull_R})
+# add_exe(user_eg3 "src/user_eg3/user_eg3_r.cpp;${libqhullcpp_SOURCES}" ${LIB_NAME_qhull_R})
 
 # ---------------------------------------
 # qhullp is qhull/unix.c linked to deprecated qh_QHpointer libqhull_p
@@ -481,9 +481,10 @@ set_target_properties(user_egp PROPERTIES
 # ---------------------------------------
 
 enable_testing()
-add_test(user_eg_1 user_eg "QR1 p n Qt" "v p" Fp)
-add_test(user_eg2_1 user_eg2 "QR1 p" "v p" Fp)
+# add_test(user_eg_1 user_eg "QR1 p n Qt" "v p" Fp)
+# add_test(user_eg2_1 user_eg2 "QR1 p" "v p" Fp)
 # add_test(user_eg3_1 user_eg3 rbox "10 D2" "2 D2" qhull "p")
+
 add_test(qconvex_1 qconvex -)
 add_test(qconvex_2 qconvex .)
 # add_test(qconvex_3 qconvex)
@@ -697,8 +698,8 @@ if(UNIX)
     add_test(NAME rbox-10-qvoronoi COMMAND sh -c "./rbox 10 | ./qvoronoi Tv")
 endif()
 
-add_test(NAME user_eg COMMAND user_eg)
-add_test(NAME user_eg2 COMMAND user_eg2)
+# add_test(NAME user_eg COMMAND user_eg)
+# add_test(NAME user_eg2 COMMAND user_eg2)
 # add_test(NAME user_eg3 COMMAND user_eg3 rbox "10 D2" "2 D2" qhull "s p" facets)
 
 set(qhull_TARGETS

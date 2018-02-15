@@ -417,5 +417,3 @@ rbox			DATA
 rbox_inuse              DATA
 qh_setendpointer
 qh_memcheck
-qh_restore_qhull
-qh_save_qhull
