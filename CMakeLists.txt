@@ -3,7 +3,7 @@
 # Purpose:  CMake build scripts
 # Author:   Dmitry Baryshnikov, dmitry.baryshnikov@nexgis.com
 ################################################################################
-# Copyright (C) 2017, NextGIS <info@nextgis.com>
+# Copyright (C) 2017-2018, NextGIS <info@nextgis.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -39,9 +39,10 @@ if(OSX_FRAMEWORK AND (BUILD_SHARED_LIBS OR BUILD_STATIC_LIBS))
 endif()
 
 if(OSX_FRAMEWORK)
-  set(INSTALL_BIN_DIR "${CMAKE_INSTALL_PREFIX}/bin" CACHE INTERNAL "Installation directory for executables" FORCE)
-  set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/Library/Frameworks" CACHE INTERNAL "Installation directory for libraries" FORCE)
+  set(INSTALL_BIN_DIR "bin" CACHE INTERNAL "Installation directory for executables" FORCE)
+  set(INSTALL_LIB_DIR "Library/Frameworks" CACHE INTERNAL "Installation directory for libraries" FORCE)
   set(INSTALL_INC_DIR "${INSTALL_LIB_DIR}/${PROJECT_NAME}.framework/Headers" CACHE INTERNAL "Installation directory for headers" FORCE)
+  set(INSTALL_CMAKECONF_DIR ${INSTALL_LIB_DIR}/${PROJECT_NAME}.framework/Resources/CMake CACHE INTERNAL "Installation directory for cmake config files" FORCE)
   set(SKIP_INSTALL_HEADERS ON)
   set(SKIP_INSTALL_FILES ON)
   set(SKIP_INSTALL_EXPORT ON)
@@ -50,11 +51,12 @@ if(OSX_FRAMEWORK)
 else()
     include(GNUInstallDirs)
 
-    set(INSTALL_BIN_DIR ${CMAKE_INSTALL_FULL_BINDIR} CACHE INTERNAL "Installation directory for executables" FORCE)
-    set(INSTALL_LIB_DIR ${CMAKE_INSTALL_FULL_LIBDIR} CACHE INTERNAL "Installation directory for libraries" FORCE)
-    set(INSTALL_INC_DIR ${CMAKE_INSTALL_FULL_INCLUDEDIR} CACHE INTERNAL "Installation directory for headers" FORCE)
-    set(INSTALL_DOC_DIR ${CMAKE_INSTALL_FULL_DOCDIR} CACHE INTERNAL "Share directory for documents" FORCE)
-    set(INSTALL_MAN_DIR ${CMAKE_INSTALL_FULL_MANDIR} CACHE INTERNAL "Share directory for manuals" FORCE)
+    set(INSTALL_BIN_DIR ${CMAKE_INSTALL_BINDIR} CACHE INTERNAL "Installation directory for executables" FORCE)
+    set(INSTALL_LIB_DIR ${CMAKE_INSTALL_LIBDIR} CACHE INTERNAL "Installation directory for libraries" FORCE)
+    set(INSTALL_INC_DIR ${CMAKE_INSTALL_INCLUDEDIR} CACHE INTERNAL "Installation directory for headers" FORCE)
+    set(INSTALL_DOC_DIR ${CMAKE_INSTALL_DOCDIR} CACHE INTERNAL "Share directory for documents" FORCE)
+    set(INSTALL_MAN_DIR ${CMAKE_INSTALL_MANDIR} CACHE INTERNAL "Share directory for manuals" FORCE)
+    set(INSTALL_CMAKECONF_DIR ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}/CMake CACHE INTERNAL "Installation directory for cmake config files" FORCE)
 endif()
 
 if(CMAKE_GENERATOR_TOOLSET MATCHES "v([0-9]+)_xp")
@@ -415,7 +417,7 @@ macro(ADD_EXE target sources tll)
     set(INSTALL_TARGETS ${INSTALL_TARGETS} ${target})
 endmacro()
 
-add_exe(qhull-app src/qhull/unix_r.c ${LIB_NAME_qhull})
+add_exe(qhull-app src/qhull/unix_r.c ${LIB_NAME_qhull_R})
 set_target_properties (qhull-app PROPERTIES
     OUTPUT_NAME "qhull"
 )
@@ -459,7 +461,7 @@ set_target_properties(user_eg PROPERTIES
 # ---------------------------------------
 
 add_exe(user_eg2 src/user_eg2/user_eg2_r.c ${LIB_NAME_qhull_R})
-add_exe(user_eg3 src/user_eg3/user_eg3_r.cpp "${LIB_NAME_qhull_R};${LIB_NAME_qhull_CPP}")
+add_exe(user_eg3 "src/user_eg3/user_eg3_r.cpp;${libqhullcpp_SOURCES}" ${LIB_NAME_qhull_R})
 
 # ---------------------------------------
 # qhullp is qhull/unix.c linked to deprecated qh_QHpointer libqhull_p
@@ -479,28 +481,224 @@ set_target_properties(user_egp PROPERTIES
 # ---------------------------------------
 
 enable_testing()
-add_test(NAME testqset
-   COMMAND ./testqset 10000)
-add_test(NAME testqset_r
-   COMMAND ./testqset_r 10000)
-add_test(NAME smoketest
-   COMMAND sh -c "./rbox D4 | ./qhull Tv")
-add_test(NAME rbox-10-qhull
-   COMMAND sh -c "./rbox 10 | ./qhull Tv")
-add_test(NAME rbox-10-qconvex
-   COMMAND sh -c "./rbox 10 | ./qconvex Tv")
-add_test(NAME rbox-10-qdelaunay
-   COMMAND sh -c "./rbox 10 | ./qdelaunay Tv")
-add_test(NAME rbox-10-qhalf
-   COMMAND sh -c "./rbox 10 | ./qconvex FQ FV n Tv | ./qhalf Tv")
-add_test(NAME rbox-10-qvoronoi
-   COMMAND sh -c "./rbox 10 | ./qvoronoi Tv")
-add_test(NAME user_eg
-   COMMAND sh -c "./user_eg")
-add_test(NAME user_eg2
-   COMMAND sh -c "./user_eg2")
-add_test(NAME user_eg3
-   COMMAND sh -c "./user_eg3 rbox '10 D2' '2 D2' qhull 's p' facets")
+add_test(user_eg_1 user_eg "QR1 p n Qt" "v p" Fp)
+add_test(user_eg2_1 user_eg2 "QR1 p" "v p" Fp)
+# add_test(user_eg3_1 user_eg3 rbox "10 D2" "2 D2" qhull "p")
+add_test(qconvex_1 qconvex -)
+add_test(qconvex_2 qconvex .)
+add_test(qconvex_3 qconvex)
+if(UNIX)
+    add_test(NAME rbox_qconvex_1 COMMAND sh -c "./rbox c D3 | ./qconvex s n Qt")
+    add_test(NAME rbox_qconvex_2 COMMAND sh -c "./rbox c D2 | ./qconvex i Qt")
+    add_test(NAME rbox_qconvex_3 COMMAND sh -c "./rbox c D2 | ./qconvex o")
+    add_test(NAME rbox_qconvex_4 COMMAND sh -c "./rbox 1000 s | ./qconvex s Tv FA")
+    add_test(NAME rbox_qconvex_5 COMMAND sh -c "./rbox c d D2 | ./qconvex s Qc Fx")
+    add_test(NAME rbox_qconvex_6 COMMAND sh -c "./rbox y 1000 W0 | ./qconvex s n")
+    add_test(NAME rbox_qconvex_7 COMMAND sh -c "./rbox y 1000 W0 | ./qconvex s QJ")
+    add_test(NAME rbox_qconvex_8 COMMAND sh -c "./rbox d G1 D12 | ./qconvex QR0 FA")
+    add_test(NAME rbox_qconvex_9 COMMAND sh -c "./rbox c D6 | ./qconvex FA TF500")
+    add_test(NAME rbox_qconvex_10 COMMAND sh -c "./rbox c P0 d D2 | ./qconvex p Fa Fc FP FI Fn FN FS Fv Fx")
+    add_test(NAME rbox_qconvex_11 COMMAND sh -c "./rbox c d D2 | ./qconvex s i QV0")
+    # add_test(NAME rbox_qconvex_12 COMMAND sh -c "./rbox c | ./qconvex Q0")
+endif()
+add_test(qvoronoi_1 qvoronoi -)
+add_test(qvoronoi_2 qvoronoi .)
+add_test(qvoronoi_3 qvoronoi)
+if(UNIX)
+    add_test(NAME rbox_qvoronoi_1 COMMAND sh -c "./rbox c P0 D2 | ./qvoronoi s o")
+    add_test(NAME rbox_qvoronoi_2 COMMAND sh -c "./rbox c P0 D2 | ./qvoronoi Fi")
+    add_test(NAME rbox_qvoronoi_3 COMMAND sh -c "./rbox c P0 D2 | ./qvoronoi Fo")
+    add_test(NAME rbox_qvoronoi_4 COMMAND sh -c "./rbox c P0 D2 | ./qvoronoi Fv")
+    add_test(NAME rbox_qvoronoi_5 COMMAND sh -c "./rbox c P0 D2 | ./qvoronoi s Qu Qt Fv")
+    add_test(NAME rbox_qvoronoi_6 COMMAND sh -c "./rbox c P0 D2 | ./qvoronoi Qu Fo")
+    add_test(NAME rbox_qvoronoi_7 COMMAND sh -c "./rbox c G1 d D2 | ./qvoronoi s p ")
+    add_test(NAME rbox_qvoronoi_8 COMMAND sh -c "./rbox c G1 d D2 | ./qvoronoi QJ p ")
+    add_test(NAME rbox_qvoronoi_9 COMMAND sh -c "./rbox c P-0.1 P+0.1 P+0.1 D2 | ./qvoronoi s Fc FP FQ Fn FN ")
+    add_test(NAME rbox_qvoronoi_10 COMMAND sh -c "./rbox P0 c D2 | ./qvoronoi s Fv QV0")
+endif()
+add_test(qdelaunay_1 qdelaunay -)
+add_test(qdelaunay_2 qdelaunay .)
+add_test(qdelaunay_2 qdelaunay)
+if(UNIX)
+    add_test(NAME rbox_delaunay_1 COMMAND sh -c "./rbox c P0 D2 | ./qdelaunay s o")
+    add_test(NAME rbox_delaunay_2 COMMAND sh -c "./rbox c P0 D2 | ./qdelaunay i")
+    add_test(NAME rbox_delaunay_3 COMMAND sh -c "./rbox c P0 D2 | ./qdelaunay Fv")
+    add_test(NAME rbox_delaunay_4 COMMAND sh -c "./rbox c P0 D2 | ./qdelaunay s Qu Qt Fv")
+    add_test(NAME rbox_delaunay_5 COMMAND sh -c "./rbox c G1 d D2 | ./qdelaunay s i")
+    # add_test(NAME rbox_delaunay_6 COMMAND sh -c "./rbox c G1 d D2 | ./qdelaunay Ft")
+    # add_test(NAME rbox_delaunay_7 COMMAND sh -c "./rbox c G1 d D2 | ./qdelaunay QJ s Ft")
+    add_test(NAME rbox_delaunay_8 COMMAND sh -c "./rbox M3,4 z 100 D2 | ./qdelaunay s")
+    add_test(NAME rbox_delaunay_9 COMMAND sh -c "./rbox c P-0.1 P+0.1 P+0.1 D2 | ./qdelaunay s Fx Fa Fc FP FQ Fn FN")
+    add_test(NAME rbox_delaunay_10 COMMAND sh -c "./rbox P0 P0 c D2 | ./qdelaunay s FP QV0")
+endif()
+add_test(qhalf_1 qhalf -)
+add_test(qhalf_2 qhalf .)
+add_test(qhalf_3 qhalf)
+if(UNIX)
+    add_test(NAME rbox_qhull_qhalf_1 COMMAND sh -c "./rbox d | ./qhull FQ n | ./qhalf s H0,0,0 Fp")
+    add_test(NAME rbox_qhull_qhalf_2 COMMAND sh -c "./rbox c | ./qhull FQ FV n | ./qhalf o")
+    add_test(NAME rbox_qhull_qhalf_3 COMMAND sh -c "./rbox d D2 | ./qhull FQ n | ./qhalf s H0 Fc FP Fn FN FQ Fv Fx")
+    # add_test(NAME rbox_qhull_1 COMMAND sh -c "./rbox 1000 W0 t | ./qhull QR2 QJ s Fs Tv")
+    # add_test(NAME rbox_qhull_2 COMMAND sh -c "./rbox 1000 W0 t | ./qhull QR2 s Fs Tv")
+    # add_test(NAME rbox_qhull_3 COMMAND sh -c "./rbox 1000 s t | ./qhull C0.02 Qc Tv")
+    # add_test(NAME rbox_qhull_4 COMMAND sh -c "./rbox 500 s D4 t | ./qhull C0.01 Qc Tv")
+    # add_test(NAME rbox_qhull_5 COMMAND sh -c "./rbox 1000 s t | ./qhull C-0.02 Qc Tv")
+    # add_test(NAME rbox_qhull_6 COMMAND sh -c "./rbox 1000 s D4 t | ./qhull C-0.01 Qc Tv")
+    # add_test(NAME rbox_qhull_7 COMMAND sh -c "./rbox 200 s D5 t | ./qhull C-0.01 Qx Qc Tv")
+    # add_test(NAME rbox_qhull_8 COMMAND sh -c "./rbox 100 s D6 t | ./qhull C-0.001 Qx Qc Tv")
+    # add_test(NAME rbox_qhull_9 COMMAND sh -c "./rbox 1000 W1e-4 t | ./qhull C-1e-6 Qc Tv")
+    # add_test(NAME rbox_qhull_10 COMMAND sh -c "./rbox 1000 W5e-4 D4 t | ./qhull C-1e-5 Qc Tv")
+    # add_test(NAME rbox_qhull_11 COMMAND sh -c "./rbox 400 W1e-3 D5 t | ./qhull C-1e-5 Qx Qc Tv")
+    add_test(NAME rbox_qhull_12 COMMAND sh -c "./rbox d h | ./qhull Fd FV n FD  Tcv | ./qhull Fd H Fp Tcv")
+    add_test(NAME rbox_qhull_13 COMMAND sh -c "./rbox 10 h | ./qhull Fd FD p Tcv | ./qhull Fd d Tcv ")
+endif()
+add_test(rbox_1 rbox 3 n D2)
+add_test(rbox_2 rbox 3 n D2)
+add_test(rbox_3 rbox 3 D2)
+add_test(rbox_4 rbox 3 h D2)
+add_test(rbox_5 rbox 3 z D2)
+add_test(rbox_6 rbox 3 z h D2)
+add_test(rbox_7 rbox 3 B10 D2)
+add_test(rbox_8 rbox 3 z B10 D2)
+add_test(rbox_9 rbox 4 L2 r D2)
+add_test(rbox_10 rbox 8 L2 D2)
+add_test(rbox_11 rbox 4 L4 r D3)
+add_test(rbox_12 rbox y)
+add_test(rbox_13 rbox 10 M3,4)
+add_test(rbox_14 rbox 4 L4 s D5 W1e-3)
+
+if(UNIX)
+    add_test(NAME rbox_qhull_14 COMMAND sh -c "./rbox 10 L2 s D3 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_15 COMMAND sh -c "./rbox 10 L4 s W1e-3 D3 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_16 COMMAND sh -c "./rbox 10 L6 D3 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_17 COMMAND sh -c "./rbox 10 L1.1 s D4 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_18 COMMAND sh -c "./rbox y r 100 W0 O0.5 | ./qhull s p Tcv")
+    add_test(NAME rbox_qhull_19 COMMAND sh -c "./rbox x r 100 W0 O0.5 | ./qhull s p Tcv")
+    add_test(NAME rbox_qhull_20 COMMAND sh -c "./rbox 12 D8 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_21 COMMAND sh -c "./rbox 12 D9 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_22 COMMAND sh -c "./rbox 1000 D4 | ./qhull s i A-0.97 C0.2 A0.7 Tcv")
+    add_test(NAME rbox_qhull_23 COMMAND sh -c "./rbox 3 D2 | ./qhull Qb0B1:-2 p")
+    add_test(NAME rbox_qhull_24 COMMAND sh -c "./rbox 100 r D2 | ./qhull Pd0:0.7 PD0:0.8 n Tcv")
+    add_test(NAME rbox_qhull_25 COMMAND sh -c "./rbox 1000 s | ./qhull  C0.05 Tcv")
+    # add_test(NAME rbox_qhull_26 COMMAND sh -c "./rbox 1000 s t | ./qhull Qm C0.05 Tcv")
+    add_test(NAME rbox_qhull_27 COMMAND sh -c "./rbox 500 D2 | ./qhull n A-0.95 C0.1 Tcv")
+    add_test(NAME rbox_qhull_28 COMMAND sh -c "./rbox 500 s P1,1,1 | ./qhull QgG0 Pp Tcv")
+    add_test(NAME rbox_qhull_29 COMMAND sh -c "./rbox d | ./qhull m")
+    add_test(NAME rbox_qhull_30 COMMAND sh -c "./rbox d | ./qhull FM")
+    add_test(NAME rbox_qhull_31 COMMAND sh -c "./rbox c D2 | ./qhull Q0 Tcv")
+    add_test(NAME rbox_qhull_32 COMMAND sh -c "./rbox d D2 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_33 COMMAND sh -c "./rbox c D3 | ./qhull Q0 Tcv")
+    add_test(NAME rbox_qhull_34 COMMAND sh -c "./rbox d D3 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_35 COMMAND sh -c "./rbox c D4 | ./qhull Q0 Tcv")
+    add_test(NAME rbox_qhull_36 COMMAND sh -c "./rbox d D4 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_37 COMMAND sh -c "./rbox c D5 | ./qhull Q0 Tcv")
+    add_test(NAME rbox_qhull_38 COMMAND sh -c "./rbox d D5 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_39 COMMAND sh -c "./rbox c D6 | ./qhull Q0 Tcv")
+    add_test(NAME rbox_qhull_40 COMMAND sh -c "./rbox d D6 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_41 COMMAND sh -c "./rbox d D7 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_42 COMMAND sh -c "./rbox c D2 | ./qhull Tcv C-0")
+    add_test(NAME rbox_qhull_43 COMMAND sh -c "./rbox c D3 | ./qhull Tcv C-0")
+    add_test(NAME rbox_qhull_44 COMMAND sh -c "./rbox c D4 | ./qhull Tcv C-0")
+    add_test(NAME rbox_qhull_45 COMMAND sh -c "./rbox c D5 | ./qhull Tcv C-0")
+    add_test(NAME rbox_qhull_46 COMMAND sh -c "./rbox c D6 | ./qhull Tcv C-0")
+    add_test(NAME rbox_qhull_47 COMMAND sh -c "./rbox c D7 | ./qhull Tv C-0")
+    add_test(NAME rbox_qhull_48 COMMAND sh -c "./rbox 20 l D3 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_49 COMMAND sh -c "./rbox 100 s D2 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_50 COMMAND sh -c "./rbox 100 s D3 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_51 COMMAND sh -c "./rbox 100 s D4 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_52 COMMAND sh -c "./rbox 100 s c D4 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_53 COMMAND sh -c "./rbox 100 s d G1.5 D4 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_54 COMMAND sh -c "./rbox 100 s W1e-2 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_55 COMMAND sh -c "./rbox 100 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_56 COMMAND sh -c "./rbox 100 W1e-3 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_57 COMMAND sh -c "./rbox 100 r D2 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_58 COMMAND sh -c "./rbox 100 r s Z1 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_59 COMMAND sh -c "./rbox 100 r s Z1 G0.1 | ./qhull Tcv C-0")
+    add_test(NAME rbox_qhull_60 COMMAND sh -c "./rbox 100 s Z1 G0.1 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_61 COMMAND sh -c "./rbox 100 s Z1e-5 G0.1 | ./qhull Tc Pp")
+    add_test(NAME rbox_qhull_62 COMMAND sh -c "./rbox 5 r s D2 | ./qhull Tcv")
+    add_test(NAME rbox_qhull_63 COMMAND sh -c "./rbox 5 r s D2 | ./qhull s")
+    add_test(NAME rbox_qhull_64 COMMAND sh -c "./rbox 5 r s D2 | ./qhull s o")
+    add_test(NAME rbox_qhull_65 COMMAND sh -c "./rbox 5 r s D2 | ./qhull f")
+    add_test(NAME rbox_qhull_66 COMMAND sh -c "./rbox 5 r s D2 | ./qhull i")
+    add_test(NAME rbox_qhull_67 COMMAND sh -c "./rbox 5 r s D2 | ./qhull m")
+    add_test(NAME rbox_qhull_68 COMMAND sh -c "./rbox 5 r s D2 | ./qhull FM")
+    add_test(NAME rbox_qhull_69 COMMAND sh -c "./rbox 5 r s D2 | ./qhull n")
+    add_test(NAME rbox_qhull_70 COMMAND sh -c "./rbox 5 r s D2 | ./qhull p")
+    add_test(NAME rbox_qhull_71 COMMAND sh -c "./rbox 5 r s D2 | ./qhull o")
+    add_test(NAME rbox_qhull_72 COMMAND sh -c "./rbox 5 r s D2 | ./qhull Fx")
+    add_test(NAME rbox_qhull_73 COMMAND sh -c "./rbox 5 r s D2 | ./qhull p n i p p")
+    add_test(NAME rbox_qhull_74 COMMAND sh -c "./rbox 10 D3 | ./qhull f Tcv")
+    add_test(NAME rbox_qhull_75 COMMAND sh -c "./rbox 10 D3 | ./qhull i")
+    add_test(NAME rbox_qhull_76 COMMAND sh -c "./rbox 10 D3 | ./qhull p")
+    add_test(NAME rbox_qhull_77 COMMAND sh -c "./rbox 10 D3 | ./qhull o")
+    add_test(NAME rbox_qhull_78 COMMAND sh -c "./rbox 10 D3 | ./qhull Fx")
+    add_test(NAME rbox_qhull_79 COMMAND sh -c "./rbox 27 M1,0,1 | ./qhull Qc")
+    add_test(NAME rbox_qhull_80 COMMAND sh -c "./rbox 50 D3 s | ./qhull C0.1 Qc Pd0d1d2 s p Tcv")
+    add_test(NAME rbox_qhull_81 COMMAND sh -c "./rbox 10 D2 P0 P1e-15 | ./qhull d Qc FP s Tcv")
+    add_test(NAME rbox_qhull_82 COMMAND sh -c "./rbox 100 s | ./qhull C-0.003 Qc FP s")
+    add_test(NAME rbox_qhull_83 COMMAND sh -c "./rbox 100 s D2 | ./qhull C0.1 i Fx Tcv")
+    add_test(NAME rbox_qhull_84 COMMAND sh -c "./rbox 4 s D3 | ./qhull Qc Ghipv Tcv")
+    add_test(NAME rbox_qhull_85 COMMAND sh -c "./rbox 6 D4 | ./qhull f Tcv")
+    add_test(NAME rbox_qhull_86 COMMAND sh -c "./rbox 6 D4 | ./qhull i")
+    add_test(NAME rbox_qhull_87 COMMAND sh -c "./rbox 6 D4 | ./qhull p")
+    add_test(NAME rbox_qhull_88 COMMAND sh -c "./rbox 6 D4 | ./qhull o")
+    add_test(NAME rbox_qhull_89 COMMAND sh -c "./rbox 1000 s D2 | ./qhull FA Tcv")
+    add_test(NAME rbox_qhull_90 COMMAND sh -c "./rbox 1000 s | ./qhull FA Tcv")
+    add_test(NAME rbox_qhull_91 COMMAND sh -c "./rbox c D4 | ./qhull FA Tcv")
+    add_test(NAME rbox_qhull_92 COMMAND sh -c "./rbox c D5 | ./qhull FA Tcv")
+    add_test(NAME rbox_qhull_93 COMMAND sh -c "./rbox 10 D2 | ./qhull d FA Tcv")
+    add_test(NAME rbox_qhull_94 COMMAND sh -c "./rbox 10 D2 | ./qhull d Qu FA Tcv")
+    add_test(NAME rbox_qhull_95 COMMAND sh -c "./rbox 10 D2 | ./qhull FA Tcv")
+    add_test(NAME rbox_qhull_96 COMMAND sh -c "./rbox 10 c D2 | ./qhull Fx Tcv")
+    add_test(NAME rbox_qhull_97 COMMAND sh -c "./rbox 1000 s | ./qhull FS Tcv")
+    add_test(NAME rbox_qhull_98 COMMAND sh -c "./rbox 10 W0 D2 | ./qhull p Qc FcC Tcv")
+    add_test(NAME rbox_qhull_99 COMMAND sh -c "./rbox 4 z h s D2 | ./qhull Fd s n FD Tcv")
+    add_test(NAME rbox_qhull_100 COMMAND sh -c "./rbox 6 s D3 | ./qhull C-0.1 Qc FF s FQ Fi n Fo FQ FI Fm Fn FN FO FO FQ Fs FS FV Fv Tcv")
+    add_test(NAME rbox_qhull_101 COMMAND sh -c "./rbox P0.5,0.5 P0.5,0.5 W0 5 D2 | ./qhull d FN Qc")
+    add_test(NAME rbox_qhull_102 COMMAND sh -c "./rbox 10 D3 | ./qhull Fa PA5")
+    add_test(NAME rbox_qhull_103 COMMAND sh -c "./rbox 10 D3 | ./qhull Fa PF0.4")
+    add_test(NAME rbox_qhull_104 COMMAND sh -c "./rbox c | ./qhull Qt s o Tcv")
+    add_test(NAME rbox_qhull_105 COMMAND sh -c "./rbox c | ./qhull Qt f i")
+    add_test(NAME rbox_qhull_106 COMMAND sh -c "./rbox c | ./qhull Qt m FM n")
+    add_test(NAME rbox_qhull_107 COMMAND sh -c "./rbox c | ./qhull Qt p o")
+    add_test(NAME rbox_qhull_108 COMMAND sh -c "./rbox c | ./qhull Qt Fx")
+    add_test(NAME rbox_qhull_109 COMMAND sh -c "./rbox c | ./qhull Qt FA s Fa")
+    add_test(NAME rbox_qhull_110 COMMAND sh -c "./rbox 6 r s c G0.1 D2 | ./qhull Qt d FA Tcv")
+    add_test(NAME rbox_qhull_111 COMMAND sh -c "./rbox 6 r s c G0.1 D2 | ./qhull d FA Tcv")
+    add_test(NAME rbox_qhull_112 COMMAND sh -c "./rbox 6 r s c G0.1 D2 | ./qhull Qt v p Tcv")
+    add_test(NAME rbox_qhull_113 COMMAND sh -c "./rbox c | ./qhull Qt C-0.1 Qc FF s FQ Fi n Fo FQ FI Fm Fn FN FO FO FQ Fs FS FV Fv Tcv")
+    add_test(NAME rbox_qhull_114 COMMAND sh -c "./rbox 6 r s c G0.1 D2 P0.1,0.1 | ./qhull s FP d FO Qt")
+    # add_test(NAME rbox_qhull_115 COMMAND sh -c "./rbox c | qhull PD0:0.5 n | ./qhull H0 Fp Tcv")
+    add_test(NAME rbox_qhull_116 COMMAND sh -c "./rbox 1000 W1e-3 D3 | ./qhull PA8 Fa FS s n Tcv")
+    add_test(NAME rbox_qhull_117 COMMAND sh -c "./rbox 1000 W1e-3 D3 | ./qhull C-0.01 PM10 Fm n Tcv Qc")
+    add_test(NAME rbox_qhull_118 COMMAND sh -c "./rbox 1000 W1e-3 D3 | ./qhull C-0.01 PA8 PG n Tcv Qc")
+    add_test(NAME rbox_qhull_119 COMMAND sh -c "./rbox 10 | ./qhull FO Tz TO q_test.log.1")
+    add_test(NAME rbox_qhull_120 COMMAND sh -c "./rbox 10 D2 | ./qhull d Tcv")
+    add_test(NAME rbox_qhull_121 COMMAND sh -c "./rbox 10 D2 | ./qhull d Qz Tcv")
+    add_test(NAME rbox_qhull_122 COMMAND sh -c "./rbox 10 D3 | ./qhull d Tcv")
+    add_test(NAME rbox_qhull_123 COMMAND sh -c "./rbox c | ./qhull d Qz Ft Tcv")
+    add_test(NAME rbox_qhull_124 COMMAND sh -c "./rbox 10 s D2 c | ./qhull d Tcv")
+    add_test(NAME rbox_qhull_125 COMMAND sh -c "./rbox 10 s D2 | ./qhull d Tcv Qz Q8")
+    add_test(NAME rbox_qhull_126 COMMAND sh -c "./rbox 10 D2 | ./qhull d Tcv p")
+    # TODO: Add tests
+endif()
+
+add_test(NAME testqset COMMAND testqset 10000)
+add_test(NAME testqset_r COMMAND testqset_r 10000)
+
+if(UNIX)
+    add_test(NAME smoketest COMMAND sh -c "./rbox D4 | ./qhull Tv")
+    add_test(NAME rbox-10-qhull COMMAND sh -c "./rbox 10 | ./qhull Tv")
+    add_test(NAME rbox-10-qconvex COMMAND sh -c "./rbox 10 | ./qconvex Tv")
+    add_test(NAME rbox-10-qdelaunay COMMAND sh -c "./rbox 10 | ./qdelaunay Tv")
+    add_test(NAME rbox-10-qhalf COMMAND sh -c "./rbox 10 | ./qconvex FQ FV n Tv | ./qhalf Tv")
+    add_test(NAME rbox-10-qvoronoi COMMAND sh -c "./rbox 10 | ./qvoronoi Tv")
+endif()
+
+add_test(NAME user_eg COMMAND user_eg)
+add_test(NAME user_eg2 COMMAND user_eg2)
+# add_test(NAME user_eg3 COMMAND user_eg3 rbox "10 D2" "2 D2" qhull "s p" facets)
 
 set(qhull_TARGETS
     ${LIB_NAME_qhull}
@@ -512,30 +710,12 @@ set(qhull_TARGETS_INSTALL ${qhull_TARGETS}
     qhull-app rbox qconvex qdelaunay qvoronoi qhalf
 )
 
-if (REGISTER_PACKAGE)
-    export(TARGETS ${qhull_TARGETS} FILE ${PROJECT_NAME}-exports.cmake)
-
-    set(EXPORT_PACKAGE_NAME QHULL)
-    string(TOUPPER ${EXPORT_PACKAGE_NAME} EXPORT_PACKAGE_NAME_UPPER)
-    set(EXPORT_PACKAGE_LIB_NAME ${PROJECT_NAME})
-
-    export(PACKAGE ${EXPORT_PACKAGE_NAME})
-
-    include(CMakePackageConfigHelpers)
-    configure_package_config_file(
-        ${CMAKE_SOURCE_DIR}/cmake/PackageConfig.cmake.in
-        ${CMAKE_CURRENT_BINARY_DIR}/${EXPORT_PACKAGE_NAME}Config.cmake
-        INSTALL_DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
-    write_basic_package_version_file(
-        ${CMAKE_CURRENT_BINARY_DIR}/${EXPORT_PACKAGE_NAME}ConfigVersion.cmake
-        VERSION ${VERSION}
-        COMPATIBILITY AnyNewerVersion )
-else()
-    export(TARGETS ${qhull_TARGETS} FILE ${PROJECT_NAME}-exports.cmake EXPORT_LINK_INTERFACE_LIBRARIES)
-endif()
+set(PACKAGE_NAME ${PROJECT_NAME})
+string(TOUPPER ${PACKAGE_NAME} PACKAGE_UPPER_NAME)
 
 if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL)
     install(TARGETS ${qhull_TARGETS_INSTALL}
+        EXPORT ${PACKAGE_UPPER_NAME}Targets
         RUNTIME DESTINATION ${INSTALL_BIN_DIR} COMPONENT applications
         ARCHIVE DESTINATION ${INSTALL_LIB_DIR} COMPONENT libraries
         LIBRARY DESTINATION ${INSTALL_LIB_DIR} COMPONENT libraries
@@ -557,3 +737,53 @@ if (NOT SKIP_INSTALL_HEADERS AND NOT SKIP_INSTALL_ALL)
     install(FILES ${libqhullr_HEADERS}    DESTINATION ${INSTALL_INC_DIR}/libqhull_r)
     install(FILES ${libqhullcpp_HEADERS} DESTINATION ${INSTALL_INC_DIR}/libqhullcpp)
 endif()
+
+# Export package ===============================================================
+
+# Add path to includes to build-tree export
+target_include_directories(${qhull_TARGETS} PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+)
+
+# Add all targets to the build-tree export set
+export(TARGETS ${qhull_TARGETS}
+    FILE ${PROJECT_BINARY_DIR}/${PACKAGE_UPPER_NAME}Targets.cmake)
+
+if(REGISTER_PACKAGE)
+    # Export the package for use from the build-tree
+    # (this registers the build-tree with a global CMake-registry)
+    export(PACKAGE ${PACKAGE_UPPER_NAME})
+endif()
+
+# Create the <Package>Config.cmake file
+configure_file(cmake/PackageConfig.cmake.in
+    ${PROJECT_BINARY_DIR}/${PACKAGE_UPPER_NAME}Config.cmake @ONLY)
+
+if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL)
+    # Install the <Package>Config.cmake
+    install(FILES
+      ${PROJECT_BINARY_DIR}/${PACKAGE_UPPER_NAME}Config.cmake
+      DESTINATION ${INSTALL_CMAKECONF_DIR} COMPONENT dev)
+
+    # Install the export set for use with the install-tree
+    install(EXPORT ${PACKAGE_UPPER_NAME}Targets DESTINATION ${INSTALL_CMAKECONF_DIR} COMPONENT dev)
+endif()
+
+# Archiving ====================================================================
+
+set(CPACK_PACKAGE_NAME "${PACKAGE_NAME}")
+set(CPACK_PACKAGE_VENDOR "${PACKAGE_VENDOR}")
+set(CPACK_PACKAGE_VERSION "${VERSION}")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PACKAGE_NAME} Installation")
+set(CPACK_PACKAGE_RELOCATABLE TRUE)
+set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
+set(CPACK_GENERATOR "ZIP")
+set(CPACK_MONOLITHIC_INSTALL ON)
+set(CPACK_STRIP_FILES TRUE)
+
+# Get cpack zip archive name
+get_cpack_filename(${VERSION} PROJECT_CPACK_FILENAME)
+set(CPACK_PACKAGE_FILE_NAME ${PROJECT_CPACK_FILENAME})
+
+include(CPack)
