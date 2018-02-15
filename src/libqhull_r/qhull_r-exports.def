@@ -403,3 +403,4 @@ qh_voronoi_center
 qh_willdelete
 qh_zero
 qh_setendpointer
+qh_memcheck
