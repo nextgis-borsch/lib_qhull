@@ -1,7 +1,7 @@
 .,.,,"README.txt,REGISTER.txt,index.htm,COPYING.txt,Announce.txt"
 build,build,skip,
 eg,eg,,*
-html,html,,"htm,jpg,txt,gif"
+html,html,,"htm,jpg,txt,gif,man"
 src,src,,txt
 src/libqhull,src/libqhull,,"c,h,htm,def"
 src/libqhull_r,src/libqhull_r,,"c,h,htm,def"

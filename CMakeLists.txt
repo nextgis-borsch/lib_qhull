@@ -706,7 +706,6 @@ set(qhull_TARGETS
     ${LIB_NAME_qhull}
 )
 set(qhull_TARGETS_INSTALL ${qhull_TARGETS}
-    # ${LIB_NAME_qhull_CPP}
     ${LIB_NAME_qhull_P}
     ${LIB_NAME_qhull_R}
     qhull-app rbox qconvex qdelaunay qvoronoi qhalf
