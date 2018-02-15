@@ -3,7 +3,7 @@ build,build,skip,
 eg,eg,,*
 html,html,,"htm,jpg,txt,gif,man"
 src,src,,txt
-src/libqhull,src/libqhull,,"c,h,htm,def"
+src/libqhull,src/libqhull,,"c,h,htm,def,DEPRECATED.txt"
 src/libqhull_r,src/libqhull_r,,"c,h,htm,def"
 src/libqhullcpp,src/libqhullcpp,,"cpp,h"
 src/qconvex,src/qconvex,,c
