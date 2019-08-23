@@ -1,17 +1,15 @@
 /****************************************************************************
 **
-** Copyright (c) 2008-2015 C.B. Barber. All rights reserved.
-** $Id: //main/2015/qhull/src/libqhullcpp/QhullVertex.h#3 $$Change: 2066 $
-** $DateTime: 2016/01/18 19:29:17 $$Author: bbarber $
+** Copyright (c) 2008-2019 C.B. Barber. All rights reserved.
+** $Id: //main/2019/qhull/src/libqhullcpp/QhullVertex.h#1 $$Change: 2661 $
+** $DateTime: 2019/05/24 20:09:58 $$Author: bbarber $
 **
 ****************************************************************************/
 
 #ifndef QHULLVERTEX_H
 #define QHULLVERTEX_H
 
-extern "C" {
-    #include "libqhull_r/qhull_ra.h"
-}
+#include "libqhull_r/qhull_ra.h"
 #include "libqhullcpp/QhullPoint.h"
 #include "libqhullcpp/QhullLinkedList.h"
 #include "libqhullcpp/QhullSet.h"
@@ -72,6 +70,8 @@ public:
     int                 dimension() const { return (qh_qh ? qh_qh->hull_dim : 0); }
     vertexT *           getBaseT() const { return getVertexT(); } //!< For QhullSet<QhullVertex>
     vertexT *           getVertexT() const { return qh_vertex; }
+    bool                hasNext() const { return (qh_vertex->next != NULL && qh_vertex->next != qh_qh->vertex_tail); }
+    bool                hasPrevious() const { return (qh_vertex->previous != NULL); }
     countT              id() const { return qh_vertex->id; }
     bool                isValid() const { return (qh_qh && qh_vertex != &s_empty_vertex); }
                         //! True if defineVertexNeighborFacets() already called.  Auotomatically set for facet merging, Voronoi diagrams

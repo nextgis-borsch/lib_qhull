@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (c) 2008-2015 C.B. Barber. All rights reserved.
-** $Id: //main/2015/qhull/src/libqhullcpp/Qhull.h#3 $$Change: 2066 $
-** $DateTime: 2016/01/18 19:29:17 $$Author: bbarber $
+** Copyright (c) 2008-2019 C.B. Barber. All rights reserved.
+** $Id: //main/2019/qhull/src/libqhullcpp/Qhull.h#2 $$Change: 2673 $
+** $DateTime: 2019/06/07 16:27:53 $$Author: bbarber $
 **
 ****************************************************************************/
 
@@ -78,7 +78,7 @@ public:
     QhullPoint          inputOrigin();
                         //! non-const due to QhullPoint
     QhullPoint          origin() { QHULL_ASSERT(initialized()); return QhullPoint(qh_qh, origin_point.data()); }
-    QhullQh *           qh() const { return qh_qh; };
+    QhullQh *           qh() const { return qh_qh; }
     const char *        qhullCommand() const { return qh_qh->qhull_command; }
     const char *        rboxCommand() const { return qh_qh->rbox_command; }
     int                 rotateRandom() const { return qh_qh->ROTATErandom; } //!< Return QRn for repeating QR0 runs

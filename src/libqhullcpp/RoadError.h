@@ -1,17 +1,15 @@
 /****************************************************************************
 **
-** Copyright (c) 2008-2015 C.B. Barber. All rights reserved.
-** $Id: //main/2015/qhull/src/libqhullcpp/RoadError.h#3 $$Change: 2066 $
-** $DateTime: 2016/01/18 19:29:17 $$Author: bbarber $
+** Copyright (c) 2008-2019 C.B. Barber. All rights reserved.
+** $Id: //main/2019/qhull/src/libqhullcpp/RoadError.h#3 $$Change: 2673 $
+** $DateTime: 2019/06/07 16:27:53 $$Author: bbarber $
 **
 ****************************************************************************/
 
 #ifndef ROADERROR_H
 #define ROADERROR_H
 
-extern "C" {
-    #include "libqhull_r/user_r.h"  /* for QHULL_CRTDBG */
-}
+#include "libqhull_r/user_r.h"  /* for QHULL_CRTDBG */
 #include "libqhullcpp/RoadLogEvent.h"
 
 #include <iostream>
@@ -60,7 +58,7 @@ public:
     RoadError(int code, const char *fmt, int d, int d2, float f, double e);
 
     RoadError &         operator=(const RoadError &other);
-                        ~RoadError() throw() {};
+                        ~RoadError() throw() {}
 
 #//!\name Class methods
 
@@ -73,9 +71,9 @@ public:
 
 #//!\name GetSet
     bool                isValid() const { return log_event.isValid(); }
-    int                 errorCode() const { return error_code; };
-   // FIXUP QH11021 should RoadError provide errorMessage().  Currently what()
-    RoadLogEvent        roadLogEvent() const { return log_event; };
+    int                 errorCode() const { return error_code; }
+   // QH11021 FIX: should RoadError provide errorMessage().  Currently what()
+    RoadLogEvent        roadLogEvent() const { return log_event; }
 
 #//!\name Update
     void                logErrorLastResort() const;

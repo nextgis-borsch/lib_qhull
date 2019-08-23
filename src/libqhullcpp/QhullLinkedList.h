@@ -1,17 +1,15 @@
 /****************************************************************************
 **
-** Copyright (c) 2008-2015 C.B. Barber. All rights reserved.
-** $Id: //main/2015/qhull/src/libqhullcpp/QhullLinkedList.h#6 $$Change: 2066 $
-** $DateTime: 2016/01/18 19:29:17 $$Author: bbarber $
+** Copyright (c) 2008-2019 C.B. Barber. All rights reserved.
+** $Id: //main/2019/qhull/src/libqhullcpp/QhullLinkedList.h#2 $$Change: 2664 $
+** $DateTime: 2019/05/25 13:44:04 $$Author: bbarber $
 **
 ****************************************************************************/
 
 #ifndef QHULLLINKEDLIST_H
 #define QHULLLINKEDLIST_H
 
-extern "C" {
-    #include "libqhull_r/qhull_ra.h"
-}
+#include "libqhull_r/qhull_ra.h"
 #include "libqhullcpp/QhullError.h"
 
 #include <cstddef>  // ptrdiff_t, size_t
@@ -191,7 +189,7 @@ public:
 };//QhullLinkedList
 
 template <typename T>
-class QhullLinkedListIterator // FIXUP QH11016 define QhullMutableLinkedListIterator
+class QhullLinkedListIterator // QH11016 FIX: define QhullMutableLinkedListIterator
 {
     typedef typename QhullLinkedList<T>::const_iterator const_iterator;
     const QhullLinkedList<T> *c;

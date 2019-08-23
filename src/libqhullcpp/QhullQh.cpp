@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (c) 2008-2015 C.B. Barber. All rights reserved.
-** $Id: //main/2015/qhull/src/libqhullcpp/QhullQh.cpp#5 $$Change: 2066 $
-** $DateTime: 2016/01/18 19:29:17 $$Author: bbarber $
+** Copyright (c) 2008-2019 C.B. Barber. All rights reserved.
+** $Id: //main/2019/qhull/src/libqhullcpp/QhullQh.cpp#3 $$Change: 2710 $
+** $DateTime: 2019/06/27 14:24:04 $$Author: bbarber $
 **
 ****************************************************************************/
 
@@ -88,7 +88,7 @@ checkAndFreeQhullMemory()
 void QhullQh::
 appendQhullMessage(const string &s)
 {
-    if(output_stream && use_output_stream && this->USEstdout){ 
+    if(output_stream && use_output_stream && this->USEstdout){
         *output_stream << s;
     }else if(error_stream){
         *error_stream << s;
@@ -111,7 +111,7 @@ bool QhullQh::
 hasQhullMessage() const
 {
     return (!qhull_message.empty() || qhull_status!=qh_ERRnone);
-    //FIXUP QH11006 -- inconsistent usage with Rbox.  hasRboxMessage just tests rbox_status.  No appendRboxMessage()
+    // QH11006 FIX: inconsistent usage with Rbox.  hasRboxMessage just tests rbox_status.  No appendRboxMessage()
 }
 
 void QhullQh::
@@ -134,7 +134,7 @@ maybeThrowQhullMessage(int exitCode)
     if(qhull_status!=qh_ERRnone){
         QhullError e(qhull_status, qhull_message);
         clearQhullMessage();
-        throw e; // FIXUP QH11007: copy constructor is expensive if logging
+        throw e; // QH11007 FIX: copy constructor is expensive if logging
     }
 }//maybeThrowQhullMessage
 
@@ -193,6 +193,7 @@ setOutputStream(ostream *os)
 
 notes:
     only called from libqhull
+    sets qhullQh->qhull_status if msgcode is error 6000..6999
     same as fprintf() and RboxPoints.qh_fprintf_rbox()
     fgets() is not trapped like fprintf()
     Do not throw errors from here.  Use qh_errexit;
@@ -200,12 +201,14 @@ notes:
 extern "C"
 void qh_fprintf(qhT *qh, FILE *fp, int msgcode, const char *fmt, ... ) {
     va_list args;
+    int last_errcode;
 
     using namespace orgQhull;
 
     if(!qh->ISqhullQh){
         qh_fprintf_stderr(10025, "Qhull error: qh_fprintf called from a Qhull instance without QhullQh defined\n");
-        qh_exit(10025);
+        last_errcode= 10025;
+        qh_exit(last_errcode);
     }
     QhullQh *qhullQh= static_cast<QhullQh *>(qh);
     va_start(args, fmt);
@@ -229,7 +232,7 @@ void qh_fprintf(qhT *qh, FILE *fp, int msgcode, const char *fmt, ... ) {
         va_end(args);
         return;
     }
-    // FIXUP QH11008: how do users trap messages and handle input?  A callback?
+    // QH11008 FIX: how do users trap messages and handle input?  A callback?
     char newMessage[MSG_MAXLEN];
     vsnprintf(newMessage, sizeof(newMessage), fmt, args);
     qhullQh->appendQhullMessage(newMessage);

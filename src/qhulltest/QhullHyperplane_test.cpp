@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (c) 2009-2015 C.B. Barber. All rights reserved.
-** $Id: //main/2015/qhull/src/qhulltest/QhullHyperplane_test.cpp#4 $$Change: 2064 $
-** $DateTime: 2016/01/18 12:36:08 $$Author: bbarber $
+** Copyright (c) 2009-2019 C.B. Barber. All rights reserved.
+** $Id: //main/2019/qhull/src/qhulltest/QhullHyperplane_test.cpp#1 $$Change: 2661 $
+** $DateTime: 2019/05/24 20:09:58 $$Author: bbarber $
 **
 ****************************************************************************/
 

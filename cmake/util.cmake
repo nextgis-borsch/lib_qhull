@@ -3,8 +3,8 @@
 # Purpose:  CMake build scripts
 # Author:   Dmitry Baryshnikov, dmitry.baryshnikov@nextgis.com
 ################################################################################
-# Copyright (C) 2017-2018, NextGIS <info@nextgis.com>
-# Copyright (C) 2017-2018 Dmitry Baryshnikov
+# Copyright (C) 2017-2019, NextGIS <info@nextgis.com>
+# Copyright (C) 2017-2019 Dmitry Baryshnikov
 #
 # This script is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@ function(check_version ver ver2 sover)
     # major, minor and rev parameters
     set(VERSION_FILE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/util.cmake)
 
-    set(VERSION 7.2.0)
-    set(VERSION2 2015.2 2016/01/18)
+    set(VERSION 7.3.2)
+    set(VERSION2 2019.1 2019/06/21)
     set(SOVERSION 7)
 
     set(${ver} ${VERSION} PARENT_SCOPE)
@@ -86,31 +86,29 @@ macro( find_exthost_program )
     endif()
 endmacro()
 
-
-# macro to find path on the host OS
-macro( find_exthost_path )
-    if(CMAKE_CROSSCOMPILING)
-        set( CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER )
-        set( CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER )
-        set( CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER )
-
-        find_path( ${ARGN} )
-
-        set( CMAKE_FIND_ROOT_PATH_MODE_PROGRAM ONLY )
-        set( CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY )
-        set( CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY )
-    else()
-        find_path( ${ARGN} )
+function(get_prefix prefix IS_STATIC)
+  if(IS_STATIC)
+    set(STATIC_PREFIX "static-")
+      if(ANDROID)
+        set(STATIC_PREFIX "${STATIC_PREFIX}android-${ANDROID_ABI}-")
+      elseif(IOS)
+        set(STATIC_PREFIX "${STATIC_PREFIX}ios-${IOS_ARCH}-")
+      endif()
     endif()
-endmacro()
+  set(${prefix} ${STATIC_PREFIX} PARENT_SCOPE)
+endfunction()
+
 
 function(get_cpack_filename ver name)
     get_compiler_version(COMPILER)
-    if(BUILD_STATIC_LIBS)
-        set(STATIC_PREFIX "static-")
+    
+    if(NOT DEFINED BUILD_STATIC_LIBS)
+      set(BUILD_STATIC_LIBS OFF)
     endif()
 
-    set(${name} ${PROJECT_NAME}-${STATIC_PREFIX}${ver}-${COMPILER} PARENT_SCOPE)
+    get_prefix(STATIC_PREFIX ${BUILD_STATIC_LIBS})
+
+    set(${name} ${PACKAGE_NAME}-${ver}-${STATIC_PREFIX}${COMPILER} PARENT_SCOPE)
 endfunction()
 
 function(get_compiler_version ver)

@@ -1,22 +1,19 @@
 /****************************************************************************
 **
-** Copyright (c) 2008-2015 C.B. Barber. All rights reserved.
-** $Id: //main/2015/qhull/src/qhulltest/qhulltest.cpp#4 $$Change: 2064 $
-** $DateTime: 2016/01/18 12:36:08 $$Author: bbarber $
+** Copyright (c) 2008-2019 C.B. Barber. All rights reserved.
+** $Id: //main/2019/qhull/src/qhulltest/qhulltest.cpp#1 $$Change: 2661 $
+** $DateTime: 2019/05/24 20:09:58 $$Author: bbarber $
 **
 ****************************************************************************/
 
 //pre-compiled headers
-extern "C" {
-    #include "libqhull_r/user_r.h"
-}
+#include "libqhull_r/user_r.h"
+
 #include <iostream>
 #include "RoadTest.h" // QT_VERSION
 
 #include "libqhullcpp/RoadError.h"
-extern "C" {
-    #include "libqhull_r/qhull_ra.h"
-}
+#include "libqhull_r/qhull_ra.h"
 
 #include <sstream>
 #include <stdexcept>
@@ -29,7 +26,8 @@ namespace orgQhull {
 
 void addQhullTests(QStringList &args)
 {
-    TESTadd_(add_Qhull_test);
+    // Default test, use Qhull_test for qhulltest-ok.txt
+    TESTadd_(add_Qhull_test); 
 
     if(args.contains("--all")){
         args.removeAll("--all");
@@ -88,7 +86,7 @@ int main(int argc, char *argv[])
     return status;
 }
 
-}//orgQhull
+}//namespace orgQhull
 
 int main(int argc, char *argv[])
 {

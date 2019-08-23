@@ -1,8 +1,8 @@
 /****************************************************************************
 **
-** Copyright (c) 2008-2015 C.B. Barber. All rights reserved.
-** $Id: //main/2015/qhull/src/libqhullcpp/Qhull.cpp#3 $$Change: 2066 $
-** $DateTime: 2016/01/18 19:29:17 $$Author: bbarber $
+** Copyright (c) 2008-2019 C.B. Barber. All rights reserved.
+** $Id: //main/2019/qhull/src/libqhullcpp/Qhull.cpp#6 $$Change: 2711 $
+** $DateTime: 2019/06/27 22:34:56 $$Author: bbarber $
 **
 ****************************************************************************/
 
@@ -34,7 +34,7 @@ namespace orgQhull {
 #//!\name Global variables
 
 const char s_unsupported_options[]=" Fd TI ";
-const char s_not_output_options[]= " Fd TI A C d E H P Qb QbB Qbb Qc Qf Qg Qi Qm QJ Qr QR Qs Qt Qv Qx Qz Q0 Q1 Q2 Q3 Q4 Q5 Q6 Q7 Q8 Q9 Q10 Q11 R Tc TC TM TP TR Tv TV TW U v V W ";
+const char s_not_output_options[]= " Fd TI A C d E H P Qa Qb QbB Qbb Qc Qf Qg Qi Qm QJ Qr QR Qs Qt Qv Qx Qz Q0 Q1 Q2 Q3 Q4 Q5 Q6 Q7 Q8 Q9 Q10 Q11 Q15 R TA Tc TC TM TP TR Tv TV TW U v V W ";
 
 #//!\name Constructor, destructor, etc.
 Qhull::
@@ -96,7 +96,7 @@ Qhull::
 {
     // Except for cerr, does not throw errors
     if(qh_qh->hasQhullMessage()){
-        cerr<< "\nQhull output at end\n"; //FIXUP QH11005: where should error and log messages go on ~Qhull?
+        cerr<< "\nQhull output at end\n"; // QH11005 FIX: where should error and log messages go on ~Qhull?
         cerr<< qh_qh->qhullMessage();
         qh_qh->clearQhullMessage();
     }
@@ -227,14 +227,13 @@ outputQhull(const char *outputflags)
     char *command= const_cast<char*>(cmd.c_str());
     QH_TRY_(qh_qh){ // no object creation -- destructors skipped on longjmp()
         qh_clear_outputflags(qh_qh);
-        char *s = qh_qh->qhull_command + strlen(qh_qh->qhull_command) + 1; //space
+        char *s= qh_qh->qhull_command + strlen(qh_qh->qhull_command) + 1; //space
         strncat(qh_qh->qhull_command, command, sizeof(qh_qh->qhull_command)-strlen(qh_qh->qhull_command)-1);
         qh_checkflags(qh_qh, command, const_cast<char *>(s_not_output_options));
         qh_initflags(qh_qh, s);
         qh_initqhull_outputflags(qh_qh);
-        if(qh_qh->KEEPminArea < REALmax/2
-           || (0 != qh_qh->KEEParea + qh_qh->KEEPmerge + qh_qh->GOODvertex
-                    + qh_qh->GOODthreshold + qh_qh->GOODpoint + qh_qh->SPLITthresholds)){
+        if(qh_qh->KEEPminArea < REALmax/2 || qh_qh->KEEParea || qh_qh->KEEPmerge || qh_qh->GOODvertex 
+                  || qh_qh->GOODpoint || qh_qh->GOODthreshold || qh_qh->SPLITthresholds){
             facetT *facet;
             qh_qh->ONLYgood= False;
             FORALLfacet_(qh_qh->facet_list) {
@@ -243,7 +242,7 @@ outputQhull(const char *outputflags)
             qh_prepare_output(qh_qh);
         }
         qh_produce_output2(qh_qh);
-        if(qh_qh->VERIFYoutput && !qh_qh->STOPpoint && !qh_qh->STOPcone){
+        if(qh_qh->VERIFYoutput && !qh_qh->FORCEoutput && !qh_qh->STOPadd && !qh_qh->STOPcone && !qh_qh->STOPpoint){
             qh_check_points(qh_qh);
         }
     }
@@ -265,6 +264,9 @@ runQhull(const RboxPoints &rboxPoints, const char *qhullCommand2)
 void Qhull::
 runQhull(const char *inputComment2, int pointDimension, int pointCount, const realT *pointCoordinates, const char *qhullCommand2)
 {
+  /* gcc may issue a "might be clobbered" warning for pointDimension and pointCoordinates [-Wclobbered].
+     These parameters are not referenced after a longjmp() and hence not clobbered.
+     See http://stackoverflow.com/questions/7721854/what-sense-do-these-clobbered-variable-warnings-make */
     if(run_called){
         throw QhullError(10027, "Qhull error: runQhull called twice.  Only one call allowed.");
     }
@@ -303,7 +305,7 @@ runQhull(const char *inputComment2, int pointDimension, int pointCount, const re
         qh_qhull(qh_qh);
         qh_check_output(qh_qh);
         qh_prepare_output(qh_qh);
-        if(qh_qh->VERIFYoutput && !qh_qh->STOPpoint && !qh_qh->STOPcone){
+        if(qh_qh->VERIFYoutput && !qh_qh->FORCEoutput && !qh_qh->STOPadd && !qh_qh->STOPcone && !qh_qh->STOPpoint){
             qh_check_points(qh_qh);
         }
     }
@@ -329,12 +331,13 @@ initializeFeasiblePoint(int hulldim)
             qh_fprintf(qh_qh, qh_qh->ferr, 6209, "qhull error: missing feasible point for halfspace intersection.  Use option 'Hn,n' or Qhull::setFeasiblePoint before runQhull()\n");
             qh_errexit(qh_qh, qh_ERRmem, NULL, NULL);
         }
-        if(feasible_point.size()!=(size_t)hulldim){
-            qh_fprintf(qh_qh, qh_qh->ferr, 6210, "qhull error: dimension of feasiblePoint should be %d.  It is %u", hulldim, feasible_point.size());
+        if(feasible_point.size()!=static_cast<size_t>(hulldim)){
+            qh_fprintf(qh_qh, qh_qh->ferr, 6210, "qhull error: dimension of feasiblePoint should be %d.  It is %u\n", hulldim, feasible_point.size());
             qh_errexit(qh_qh, qh_ERRmem, NULL, NULL);
         }
-        if (!(qh_qh->feasible_point= (coordT*)qh_malloc(hulldim * sizeof(coordT)))) {
-            qh_fprintf(qh_qh, qh_qh->ferr, 6202, "qhull error: insufficient memory for feasible point\n");
+        qh_qh->feasible_point= static_cast<coordT*>(qh_malloc(static_cast<size_t>(hulldim) * sizeof(coordT)));
+        if (!qh_qh->feasible_point) {
+            qh_fprintf(qh_qh, qh_qh->ferr, 6042, "qhull error (Qhull.cpp): insufficient memory for feasible point\n");
             qh_errexit(qh_qh, qh_ERRmem, NULL, NULL);
         }
         coordT *t= qh_qh->feasible_point;

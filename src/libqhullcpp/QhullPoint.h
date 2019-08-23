@@ -1,17 +1,15 @@
 /****************************************************************************
 **
-** Copyright (c) 2009-2015 C.B. Barber. All rights reserved.
-** $Id: //main/2015/qhull/src/libqhullcpp/QhullPoint.h#3 $$Change: 2066 $
-** $DateTime: 2016/01/18 19:29:17 $$Author: bbarber $
+** Copyright (c) 2009-2019 C.B. Barber. All rights reserved.
+** $Id: //main/2019/qhull/src/libqhullcpp/QhullPoint.h#2 $$Change: 2673 $
+** $DateTime: 2019/06/07 16:27:53 $$Author: bbarber $
 **
 ****************************************************************************/
 
 #ifndef QHPOINT_H
 #define QHPOINT_H
 
-extern "C" {
-    #include "libqhull_r/qhull_ra.h"
-}
+#include "libqhull_r/qhull_ra.h"
 #include "libqhullcpp/QhullError.h"
 #include "libqhullcpp/QhullIterator.h"
 #include "libqhullcpp/QhullQh.h"
@@ -89,7 +87,7 @@ public:
     int                 dimension() const { return point_dimension; }
     coordT *            getBaseT() const { return point_coordinates; } // for QhullPointSet
     countT              id() const { return qh_pointid(qh_qh, point_coordinates); } // NOerrors
-    bool                isValid() const { return (point_coordinates!=0 && point_dimension>0); };
+    bool                isValid() const { return (point_coordinates!=0 && point_dimension>0); }
     bool                operator==(const QhullPoint &other) const;
     bool                operator!=(const QhullPoint &other) const { return ! operator==(other); }
     const coordT &      operator[](int idx) const { QHULL_ASSERT(point_coordinates!=0 && idx>=0 && idx<point_dimension); return *(point_coordinates+idx); } //!< 0 to hull_dim-1
@@ -106,7 +104,7 @@ public:
     int                 count() { return (point_coordinates ? point_dimension : 0); }
     iterator            end() { return (point_coordinates ? point_coordinates+point_dimension : 0); }
     const_iterator      end() const { return (point_coordinates ? point_coordinates+point_dimension : 0); }
-    size_t              size() { return (size_t)(point_coordinates ? point_dimension : 0); }
+    size_t              size() { return static_cast<size_t>(point_coordinates ? point_dimension : 0); }
 
 #//!\name Methods
     void                advancePoint(countT idx) { if(point_coordinates) { point_coordinates += idx*point_dimension; } }

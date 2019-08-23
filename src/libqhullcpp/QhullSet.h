@@ -1,17 +1,15 @@
 /****************************************************************************
 **
-** Copyright (c) 2008-2015 C.B. Barber. All rights reserved.
-** $Id: //main/2015/qhull/src/libqhullcpp/QhullSet.h#5 $$Change: 2066 $
-** $DateTime: 2016/01/18 19:29:17 $$Author: bbarber $
+** Copyright (c) 2008-2019 C.B. Barber. All rights reserved.
+** $Id: //main/2019/qhull/src/libqhullcpp/QhullSet.h#2 $$Change: 2711 $
+** $DateTime: 2019/06/27 22:34:56 $$Author: bbarber $
 **
 ****************************************************************************/
 
 #ifndef QhullSet_H
 #define QhullSet_H
 
-extern "C" {
-    #include "libqhull_r/qhull_ra.h"
-}
+#include "libqhull_r/qhull_ra.h"
 #include "libqhullcpp/QhullError.h"
 #include "libqhullcpp/QhullQh.h"
 
@@ -59,7 +57,7 @@ public:
 
 private:
                         //!disabled since memory allocation for QhullSet not defined
-                        QhullSetBase() {}
+                        QhullSetBase()  : qh_set(NULL), qh_qh(NULL) {}
 public:
 
 #//!\name GetSet
@@ -214,7 +212,7 @@ public:
         bool            operator!=(const const_iterator &o) const { return !operator==(o); }
 
         //! Assumes same point set
-        countT          operator-(const iterator &o) const { return (countT)(i-o.i); } //WARN64
+        countT          operator-(const iterator &o) const { return static_cast<countT>(i-o.i); } //WARN64
         bool            operator>(const iterator &o) const { return i>o.i; }
         bool            operator<=(const iterator &o) const { return !operator>(o); }
         bool            operator<(const iterator &o) const { return i<o.i; }
@@ -258,7 +256,7 @@ public:
         bool            operator!=(const const_iterator &o) const { return !operator==(o); }
 
         //! Assumes same point set
-        countT          operator-(const const_iterator &o) { return (countT)(i-o.i); } //WARN64
+        countT          operator-(const const_iterator &o) { return static_cast<countT>(i-o.i); } //WARN64
         bool            operator>(const const_iterator &o) const { return i>o.i; }
         bool            operator<=(const const_iterator &o) const { return !operator>(o); }
         bool            operator<(const const_iterator &o) const { return i<o.i; }
@@ -299,7 +297,7 @@ public:
     QhullSetIterator<T> &operator=(const QhullSetIterator<T> &o) { i= o.i; begin_i= o.begin_i; end_i= o.end_i; qh_qh= o.qh_qh; return *this; }
 
 #//!\name ReadOnly
-    countT              countRemaining() { return (countT)(end_i-i); } // WARN64
+    countT              countRemaining() { return static_cast<countT>(end_i-i); } // WARN64
 
 #//!\name Search
     bool                findNext(const T &t);
@@ -310,10 +308,10 @@ public:
     bool                hasPrevious() const { return i != begin_i; }
     T                   next() { return T(qh_qh, *i++); }
     T                   peekNext() const { return T(qh_qh, *i); }
-    T                   peekPrevious() const { const typename T::base_type *p = i; return T(qh_qh, *--p); }
+    T                   peekPrevious() const { const typename T::base_type *p= i; return T(qh_qh, *--p); }
     T                   previous() { return T(qh_qh, *--i); }
-    void                toBack() { i = end_i; }
-    void                toFront() { i = begin_i; }
+    void                toBack() { i= end_i; }
+    void                toFront() { i= begin_i; }
 };//class QhullSetIterator
 
 #//!\name == Definitions =========================================
@@ -327,8 +325,8 @@ template <typename T>
 std::vector<T> QhullSet<T>::
 toStdVector() const
 {
-    QhullSet<T>::const_iterator i= begin();
-    QhullSet<T>::const_iterator e= end();
+    typename QhullSet<T>::const_iterator i= begin();
+    typename QhullSet<T>::const_iterator e= end();
     std::vector<T> vs;
     while(i!=e){
         vs.push_back(*i++);
@@ -342,8 +340,8 @@ template <typename T>
 QList<T> QhullSet<T>::
 toQList() const
 {
-    QhullSet<T>::const_iterator i= begin();
-    QhullSet<T>::const_iterator e= end();
+    typename QhullSet<T>::const_iterator i= begin();
+    typename QhullSet<T>::const_iterator e= end();
     QList<T> vs;
     while(i!=e){
         vs.append(*i++);
@@ -413,7 +411,7 @@ lastIndexOf(const T &t) const
             break;
         }
     }
-    return (countT)(i-b); // WARN64
+    return static_cast<countT>(i-b); // WARN64
 }//lastIndexOf
 
 #//!\name QhullSetIterator
