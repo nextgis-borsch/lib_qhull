@@ -170,7 +170,6 @@ set(
 )
 set(
     libqhullr_SOURCES
-        src/libqhull_r/global_r.c
         src/libqhull_r/stat_r.c
         src/libqhull_r/geom2_r.c
         src/libqhull_r/poly2_r.c
@@ -434,14 +433,14 @@ macro(ADD_EXE target sources tll)
     target_link_libraries(${target} ${tll})
     if(OSX_FRAMEWORK)
         set_target_properties(${target} PROPERTIES INSTALL_RPATH "@executable_path/../../Library/Frameworks")
+    elseif(MSVC)
+        set_target_properties(${target} PROPERTIES COMPILE_DEFINITIONS "${user_eg_DEFINES}")
     endif()
     set(INSTALL_TARGETS ${INSTALL_TARGETS} ${target})
 endmacro()
 
 add_exe(qhull-app src/qhull/unix_r.c ${LIB_NAME_qhull_R})
-set_target_properties (qhull-app PROPERTIES
-    OUTPUT_NAME "qhull"
-)
+set_target_properties (qhull-app PROPERTIES OUTPUT_NAME "qhull")
 add_exe(rbox src/rbox/rbox.c ${LIB_NAME_qhull})
 add_exe(qconvex src/qconvex/qconvex.c ${LIB_NAME_qhull})
 add_exe(qdelaunay src/qdelaunay/qdelaun.c ${LIB_NAME_qhull})
