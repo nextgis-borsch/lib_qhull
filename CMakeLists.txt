@@ -170,6 +170,7 @@ set(
 )
 set(
     libqhullr_SOURCES
+        src/libqhull_r/global_r.c
         src/libqhull_r/stat_r.c
         src/libqhull_r/geom2_r.c
         src/libqhull_r/poly2_r.c
@@ -301,8 +302,7 @@ if(BUILD_SHARED_LIBS)
         )
     endif()
 elseif(OSX_FRAMEWORK)
-    add_library(${LIB_NAME_qhull} SHARED  ${libqhull_SOURCES} ${libqhull_HEADERS}
-    src/libqhull/qhull-exports.def)
+    add_library(${LIB_NAME_qhull} SHARED  ${libqhull_SOURCES} ${libqhull_HEADERS})
     set_property(SOURCE ${libqhull_HEADERS}
       PROPERTY MACOSX_PACKAGE_LOCATION Headers/libqhull
     )
@@ -342,8 +342,7 @@ if(BUILD_SHARED_LIBS)
         set_target_properties(${LIB_NAME_qhull_R} PROPERTIES IMPORT_SUFFIX "_i.lib")
     endif()
 elseif(OSX_FRAMEWORK)
-    add_library(${LIB_NAME_qhull_R} SHARED  ${libqhullr_SOURCES} ${libqhullr_HEADERS}
-    src/libqhull_r/qhull_r-exports.def)
+    add_library(${LIB_NAME_qhull_R} SHARED  ${libqhullr_SOURCES} ${libqhullr_HEADERS})
     set_property(SOURCE ${libqhullr_HEADERS}
       PROPERTY MACOSX_PACKAGE_LOCATION Headers/libqhull_r
     )
@@ -394,8 +393,7 @@ if(BUILD_SHARED_LIBS)
         set_target_properties(${LIB_NAME_qhull_P} PROPERTIES IMPORT_SUFFIX "_i.lib" COMPILE_DEFINITIONS "${qhullp_DEFINES}")
     endif()
 elseif(OSX_FRAMEWORK)
-    add_library(${LIB_NAME_qhull_P} SHARED  ${libqhull_SOURCES} ${libqhull_HEADERS}
-    src/libqhull/qhull_p-exports.def)
+    add_library(${LIB_NAME_qhull_P} SHARED  ${libqhull_SOURCES} ${libqhull_HEADERS})
     set_property(SOURCE ${libqhull_HEADERS}
       PROPERTY MACOSX_PACKAGE_LOCATION Headers/libqhull
     )
