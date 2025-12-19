@@ -78,7 +78,7 @@ set(qhull_VERSION2 "2020.2  2023/01/02")  # not used, See global.c, global_r.c, 
 set(qhull_VERSION  "8.1.0")  # Advance every release
 
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/borsch/cmake/version.cmake)
-report_version(GEOS 8.1.0)
+report_version(QHull ${qhull_VERSION})
 write_version(${CMAKE_CURRENT_SOURCE_DIR}/README.txt 8 1 0)
 
 # SOVERSION -- qhull 2003 = empty, 2009 = 5, 2010-2012 = 6, 2015-2019 = 7, 2020 = 8.0
@@ -110,7 +110,7 @@ check_lfs(WITH_LFS)
 # If LINK_APPS_SHARED=ON, link applications to libqhull_r.so
 
 include(CMakeDependentOption)
-option(BUILD_STATIC_LIBS "Build static libraries" ON)
+option(BUILD_STATIC_LIBS "Build static libraries" OFF)
 option(BUILD_SHARED_LIBS "Build shared library" ON)
 set(_NO_STATIC_LIBS NOCACHE INTERNAL (NOT ${BUILD_STATIC_LIBS}))
 cmake_dependent_option(LINK_APPS_SHARED "Use shared library for linking applications"
@@ -712,8 +712,8 @@ if (${BUILD_TESTING} AND ${BUILD_APPLICATIONS})
             COMMAND $<TARGET_FILE:rbox> 10 | $<TARGET_FILE:qvoronoi> Tv)
     endif()
 
-    if(${BUILD_STATIC_LIBS})
-        if(${WIN32})
+    if(BUILD_STATIC_LIBS)
+        if(WIN32)
             add_test(NAME user_eg3
                 COMMAND PowerShell -Command "& '$<TARGET_FILE:user_eg3>' rbox '10 D2' '2 D2' qhull 's p' facets")
         else()
@@ -729,10 +729,18 @@ if(NOT DEFINED PACKAGE_VENDOR)
     set(PACKAGE_VENDOR NextGIS)
 endif()
 
+set(QHULL_TARGETS "")
+if(BUILD_STATIC_LIBS)
+    set(QHULL_TARGETS ${QHULL_TARGETS} ${qhull_TARGETS_STATIC})
+endif()
+if(BUILD_SHARED_LIBS)
+    set(QHULL_TARGETS ${QHULL_TARGETS} ${qhull_TARGETS_SHARED})
+endif()
+
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/borsch/cmake/packaging.cmake)
 create_borsch_package(${PROJECT_NAME}
     VENDOR ${PACKAGE_VENDOR}
     VERSION ${qhull_VERSION}
-    TARGETS ${qhull_TARGETS_SHARED} ${qhull_TARGETS_STATIC}
+    TARGETS ${QHULL_TARGETS}
     HEADERS ${libqhull_HEADERS} ${libqhullr_HEADERS} ${libqhullcpp_HEADERS}
 )
