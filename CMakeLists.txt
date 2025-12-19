@@ -68,14 +68,18 @@
 # $Id: //main/2019/qhull/CMakeLists.txt#24 $$Change: 3978 $
 # $DateTime: 2025/08/24 21:38:45 $$Author: bbarber $
 
-cmake_minimum_required(VERSION 3.5...4.0)
+cmake_minimum_required(VERSION 3.16.3)
 project(qhull)
 
 # Define qhull_VERSION in README.txt, Announce.txt, qh-get.htm, CMakeLists.txt
 #   qhull-zip.sh (twice), qhull-wiki.md, qhull-news.htm, File_id.diz, index.htm
 #   qhull-warn.pri (VERSION), qhull-exports.def (VERSION), qhull_p-exports.def, qhull_r-exports.def
 set(qhull_VERSION2 "2020.2  2023/01/02")  # not used, See global.c, global_r.c, rbox.c, rbox_r.c
-set(qhull_VERSION  "8.1-alpha3")  # Advance every release
+set(qhull_VERSION  "8.1.0")  # Advance every release
+
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/borsch/cmake/version.cmake)
+report_version(GEOS 8.1.0)
+write_version(${CMAKE_CURRENT_SOURCE_DIR}/README.txt 8 1 0)
 
 # SOVERSION -- qhull 2003 = empty, 2009 = 5, 2010-2012 = 6, 2015-2019 = 7, 2020 = 8.0
 # Increase SOVERSION if ABI breaks (abi-compliance-checker)
@@ -114,7 +118,6 @@ cmake_dependent_option(LINK_APPS_SHARED "Use shared library for linking applicat
     "BUILD_SHARED_LIBS;BUILD_STATIC_LIBS"
     ${BUILD_SHARED_LIBS}
 )
-option(QHULL_ENABLE_TESTING "Build and run tests" ON)
 option(BUILD_APPLICATIONS "Build applications" ON)
 
 include(GNUInstallDirs)
@@ -132,7 +135,7 @@ message(STATUS "Build Type (CMAKE_BUILD_TYPE):             ${CMAKE_BUILD_TYPE}")
 message(STATUS "Build static libraries:                    ${BUILD_STATIC_LIBS}")
 message(STATUS "Build shared library:                      ${BUILD_SHARED_LIBS}")
 message(STATUS "Use shared library for linking apps:       ${LINK_APPS_SHARED}")
-message(STATUS "Build tests:				   ${QHULL_ENABLE_TESTING}")
+message(STATUS "Build tests:				   ${BUILD_TESTING}")
 message(STATUS "To override these options, add -D{OPTION_NAME}=... to the cmake command")
 message(STATUS "  Build the debug targets                  -DCMAKE_BUILD_TYPE=Debug")
 message(STATUS)
@@ -668,131 +671,68 @@ if(NOT ${BUILD_APPLICATIONS})
     endif()
 endif()
 
-# ---------------------------------------
-# Define test
-# ---------------------------------------
-if (${QHULL_ENABLE_TESTING} AND ${BUILD_APPLICATIONS})
-    enable_testing()
+# Testing ======================================================================
+option(BUILD_TESTING "Build and run tests" ON)  # TODO: Switch to off by default
+if (${BUILD_TESTING} AND ${BUILD_APPLICATIONS})
+    include(CTest)
     add_test(NAME testqset
-       COMMAND ./testqset 10000)
+       COMMAND $<TARGET_FILE:testqset> 10000)
     add_test(NAME testqset_r
-       COMMAND ./testqset_r 10000)
-    add_test(NAME smoketest
-       COMMAND sh -c "./rbox D4 | ./qhull Tv")
-    add_test(NAME rbox-10-qhull
-       COMMAND sh -c "./rbox 10 | ./qhull Tv")
-    add_test(NAME rbox-10-qconvex
-       COMMAND sh -c "./rbox 10 | ./qconvex Tv")
-    add_test(NAME rbox-10-qdelaunay
-       COMMAND sh -c "./rbox 10 | ./qdelaunay Tv")
-    add_test(NAME rbox-10-qhalf
-       COMMAND sh -c "./rbox 10 | ./qconvex FQ FV n Tv | ./qhalf Tv")
-    add_test(NAME rbox-10-qvoronoi
-       COMMAND sh -c "./rbox 10 | ./qvoronoi Tv")
+       COMMAND $<TARGET_FILE:testqset_r> 10000)
     add_test(NAME user_eg
-       COMMAND sh -c "./user_eg")
+       COMMAND $<TARGET_FILE:user_eg>)
     add_test(NAME user_eg2
-       COMMAND sh -c "./user_eg2")
+       COMMAND $<TARGET_FILE:user_eg2>)
+
+    if(${WIN32})
+        add_test(NAME smoketest
+            COMMAND PowerShell -Command "& '$<TARGET_FILE:rbox>' D4 | & '$<TARGET_FILE:qhull>' Tv")
+        add_test(NAME rbox-10-qhull
+            COMMAND PowerShell -Command "& '$<TARGET_FILE:rbox>' 10 | & '$<TARGET_FILE:qhull>' Tv")
+        add_test(NAME rbox-10-qconvex
+            COMMAND PowerShell -Command "& '$<TARGET_FILE:rbox>' 10 | & '$<TARGET_FILE:qconvex>' Tv")
+        add_test(NAME rbox-10-qdelaunay
+            COMMAND PowerShell -Command "& '$<TARGET_FILE:rbox>' 10 | & '$<TARGET_FILE:qdelaunay>' Tv")
+        add_test(NAME rbox-10-qhalf
+            COMMAND PowerShell -Command "& '$<TARGET_FILE:rbox>' 10 | & '$<TARGET_FILE:qconvex>' FQ FV n Tv | & '$<TARGET_FILE:qhalf>' Tv")
+        add_test(NAME rbox-10-qvoronoi
+            COMMAND PowerShell -Command "& '$<TARGET_FILE:rbox>' 10 | & '$<TARGET_FILE:qvoronoi>' Tv")
+    else()
+        add_test(NAME smoketest
+            COMMAND $<TARGET_FILE:rbox> D4 | $<TARGET_FILE:qhull> Tv)
+        add_test(NAME rbox-10-qhull
+            COMMAND $<TARGET_FILE:rbox> 10 | $<TARGET_FILE:qhull> Tv)
+        add_test(NAME rbox-10-qconvex
+            COMMAND $<TARGET_FILE:rbox> 10 | $<TARGET_FILE:qconvex> Tv)
+        add_test(NAME rbox-10-qdelaunay
+            COMMAND $<TARGET_FILE:rbox> 10 | $<TARGET_FILE:qdelaunay> Tv)
+        add_test(NAME rbox-10-qhalf
+            COMMAND $<TARGET_FILE:rbox> 10 | $<TARGET_FILE:qconvex> FQ FV n Tv | ./qhalf Tv)
+        add_test(NAME rbox-10-qvoronoi
+            COMMAND $<TARGET_FILE:rbox> 10 | $<TARGET_FILE:qvoronoi> Tv)
+    endif()
 
     if(${BUILD_STATIC_LIBS})
-        add_test(NAME user_eg3
-           COMMAND sh -c "./user_eg3 rbox '10 D2' '2 D2' qhull 's p' facets")
+        if(${WIN32})
+            add_test(NAME user_eg3
+                COMMAND PowerShell -Command "& '$<TARGET_FILE:user_eg3>' rbox '10 D2' '2 D2' qhull 's p' facets")
+        else()
+            add_test(NAME user_eg3
+                COMMAND $<TARGET_FILE:user_eg3> rbox '10 D2' '2 D2' qhull 's p' facets)
+        endif()
      endif()
 endif()
 
-# ---------------------------------------
-# Define install
-# ---------------------------------------
+# Installing and packaging =====================================================
 
-if (${BUILD_APPLICATIONS})
-    install(TARGETS ${qhull_TARGETS_APPLICATIONS} EXPORT
-            BUNDLE DESTINATION ${BIN_INSTALL_DIR}
-            RUNTIME DESTINATION ${BIN_INSTALL_DIR})
+if(NOT DEFINED PACKAGE_VENDOR)
+    set(PACKAGE_VENDOR NextGIS)
 endif()
 
-if (${BUILD_SHARED_LIBS})
-    install(TARGETS ${qhull_TARGETS_SHARED} EXPORT QhullTargets
-            LIBRARY DESTINATION ${LIB_INSTALL_DIR}
-            ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
-            INCLUDES DESTINATION ${INCLUDE_INSTALL_DIR})
-endif()
-if (${BUILD_STATIC_LIBS})
-    install(TARGETS ${qhull_TARGETS_STATIC} EXPORT QhullTargets
-            LIBRARY DESTINATION ${LIB_INSTALL_DIR}
-            ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
-            INCLUDES DESTINATION ${INCLUDE_INSTALL_DIR})
-endif()
-
-install(TARGETS ${qhull_TARGETS_INSTALL} EXPORT QhullTargets)
-
-include(CMakePackageConfigHelpers)
-
-set(ConfigPackageLocation ${CMAKE_INSTALL_LIBDIR}/cmake/Qhull)
-write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/QhullExport/QhullConfigVersion.cmake"
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/borsch/cmake/packaging.cmake)
+create_borsch_package(${PROJECT_NAME}
+    VENDOR ${PACKAGE_VENDOR}
     VERSION ${qhull_VERSION}
-    COMPATIBILITY AnyNewerVersion
+    TARGETS ${qhull_TARGETS_SHARED} ${qhull_TARGETS_STATIC}
+    HEADERS ${libqhull_HEADERS} ${libqhullr_HEADERS} ${libqhullcpp_HEADERS}
 )
-configure_package_config_file(
-    build/config.cmake.in
-    "${CMAKE_CURRENT_BINARY_DIR}/QhullExport/QhullConfig.cmake"
-    INSTALL_DESTINATION ${ConfigPackageLocation}
-)
-
-export(EXPORT QhullTargets
-  FILE "${CMAKE_CURRENT_BINARY_DIR}/QhullExport/QhullTargets.cmake"
-  NAMESPACE Qhull:: 
-)
-
-install(EXPORT QhullTargets
-  FILE
-    QhullTargets.cmake
-  NAMESPACE
-    Qhull::
-  DESTINATION
-    ${ConfigPackageLocation}
-)
-install(
-  FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/QhullExport/QhullConfig.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/QhullExport/QhullConfigVersion.cmake"
-  DESTINATION
-    ${ConfigPackageLocation}
-  COMPONENT
-    Devel
-)
-
-set(PkgConfigLocation ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
-foreach(pkgconfig IN ITEMS "${qhull_SHAREDR};Qhull reentrant shared library"
-                           "${qhull_STATIC};Qhull static library"
-                           "${qhull_STATICR};Qhull reentrant static library"
-                           "${qhull_CPP};Qhull C++ library")
-    list(GET pkgconfig 0 LIBRARY_NAME)
-    if(LIBRARY_NAME STREQUAL "libqhull")
-        set(LIBRARY_NAME "qhull")
-    endif()
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        string(REGEX REPLACE "_(.)$" "_\\1d" LIBRARY_NAME ${LIBRARY_NAME})
-        string(REGEX REPLACE "([^d])$" "\\1_d" LIBRARY_NAME ${LIBRARY_NAME})
-    endif()
-    list(GET pkgconfig 1 LIBRARY_DESCRIPTION)
-    configure_file(build/qhull.pc.in ${LIBRARY_NAME}.pc @ONLY)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${LIBRARY_NAME}.pc DESTINATION ${PkgConfigLocation} COMPONENT Devel)
-endforeach()
-
-install(FILES ${libqhull_HEADERS}    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libqhull)
-install(FILES src/libqhull/DEPRECATED.txt DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libqhull)
-install(FILES ${libqhullr_HEADERS}    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libqhull_r)
-install(FILES ${libqhullcpp_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/libqhullcpp)
-install(FILES html/qhull.man         DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 RENAME qhull.1)
-install(FILES html/rbox.man          DESTINATION ${CMAKE_INSTALL_MANDIR}/man1 RENAME rbox.1)
-install(FILES ${doc_FILES}           DESTINATION ${CMAKE_INSTALL_DOCDIR})
-install(DIRECTORY html/              DESTINATION ${CMAKE_INSTALL_DOCDIR}/html)
-install(FILES src/Changes.txt        DESTINATION ${CMAKE_INSTALL_DOCDIR}/src)
-
-if(NOT TARGET uninstall)
-    add_custom_target(uninstall
-        COMMENT "uninstall Qhull by deleting files in install_manifest.txt"
-        COMMAND cat install_manifest.txt | tr -d \"\\r\" | xargs -r rm
-    )
-endif()
