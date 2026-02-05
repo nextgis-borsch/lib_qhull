@@ -392,7 +392,6 @@ target_include_directories(${qhull_SHARED} PUBLIC
 )
 
 set_target_properties(${qhull_SHARED} PROPERTIES
-    EXCLUDE_FROM_ALL TRUE
     SOVERSION ${qhull_SOVERSION}
     VERSION ${qhull_VERSION}
     OUTPUT_NAME "qhull$<$<CONFIG:Debug>:_d>")
@@ -734,7 +733,7 @@ if(BUILD_STATIC_LIBS)
     set(QHULL_TARGETS ${QHULL_TARGETS} ${qhull_TARGETS_STATIC})
 endif()
 if(BUILD_SHARED_LIBS)
-    set(QHULL_TARGETS ${QHULL_TARGETS} ${qhull_TARGETS_SHARED})
+    set(QHULL_TARGETS ${QHULL_TARGETS} ${qhull_TARGETS_SHARED} ${qhull_SHARED})
 endif()
 
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/borsch/cmake/packaging.cmake)
@@ -742,5 +741,8 @@ create_borsch_package(${PROJECT_NAME}
     VENDOR ${PACKAGE_VENDOR}
     VERSION ${qhull_VERSION}
     TARGETS ${QHULL_TARGETS}
-    HEADERS ${libqhull_HEADERS} ${libqhullr_HEADERS} ${libqhullcpp_HEADERS}
+    HEADERS_DIRS 
+        ${CMAKE_CURRENT_LIST_DIR}/src/libqhull 
+        ${CMAKE_CURRENT_LIST_DIR}/src/libqhull_r 
+        ${CMAKE_CURRENT_LIST_DIR}/src/libqhullcpp
 )
